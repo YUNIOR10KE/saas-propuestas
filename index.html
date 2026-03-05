@@ -506,7 +506,7 @@
       spinner.style.display = 'block';
 
       try {
-        const response = await fetch('http://127.0.0.1:8000/generar_parrafo/', {
+        const response = await fetch('https://proposalai-backend-exr3.onrender.com/generar_parrafo/', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ cliente, servicio })
@@ -543,7 +543,7 @@
 
     function descargarPDF() {
       if (!propuestaId) return;
-      window.open(`http://127.0.0.1:8000/descargar_pdf/${propuestaId}`, '_blank');
+      window.open(`https://proposalai-backend-exr3.onrender.com/descargar_pdf/${propuestaId}`, '_blank');
     }
 
     // ── HISTORIAL ──
@@ -552,7 +552,7 @@
       lista.innerHTML = '<p style="color:var(--muted);text-align:center;padding:24px">Cargando...</p>';
 
       try {
-        const response = await fetch('http://127.0.0.1:8000/propuestas/');
+        const response = await fetch('https://proposalai-backend-exr3.onrender.com/propuestas/');
         const data = await response.json();
 
         if (data.length === 0) {
@@ -573,7 +573,7 @@
               <div class="card-servicio">${p.servicio}</div>
             </div>
             <div class="card-actions">
-              <button class="btn-card-pdf" onclick="window.open('http://127.0.0.1:8000/descargar_pdf/${p.id}', '_blank')">
+              <button class="btn-card-pdf" onclick="window.open('https://proposalai-backend-exr3.onrender.com/descargar_pdf/${p.id}', '_blank')">
                 📄 PDF
               </button>
             </div>
