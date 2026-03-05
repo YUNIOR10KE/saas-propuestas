@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ProposalAI — Generador de Propuestas</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0b0f1a;
+      --surface: #111827;
+      --surface2: #1a2236;
+      --accent: #e8c97e;
+      --accent2: #c4a45a;
+      --text: #f0ece4;
+      --muted: #7a8399;
+      --border: #1f2d47;
+      --radius: 16px;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 48px 24px;
+      background-image:
+        radial-gradient(ellipse 80% 50% at 50% -10%, rgba(232,201,126,0.08) 0%, transparent 70%),
+        radial-gradient(ellipse 40% 30% at 80% 80%, rgba(100,120,200,0.05) 0%, transparent 60%);
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 36px;
+      animation: fadeDown 0.7s ease both;
+    }
+
+    .badge {
+      display: inline-block;
+      background: rgba(232,201,126,0.12);
+      border: 1px solid rgba(232,201,126,0.25);
+      color: var(--accent);
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      padding: 6px 16px;
+      border-radius: 100px;
+      margin-bottom: 20px;
+    }
+
+    h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      font-weight: 700;
+      line-height: 1.15;
+      letter-spacing: -0.5px;
+      margin-bottom: 14px;
+    }
+
+    h1 span { color: var(--accent); }
+
+    header p {
+      color: var(--muted);
+      font-size: 15px;
+      max-width: 420px;
+      margin: 0 auto;
+      line-height: 1.7;
+    }
+
+    /* ── NAV TABS ── */
+    .nav-tabs {
+      display: flex;
+      gap: 8px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 6px;
+      margin-bottom: 36px;
+      animation: fadeUp 0.7s 0.1s ease both;
+    }
+
+    .nav-tab {
+      padding: 10px 24px;
+      border-radius: 8px;
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      width: auto;
+      margin: 0;
+    }
+
+    .nav-tab:hover { color: var(--text); }
+
+    .nav-tab.active {
+      background: var(--accent);
+      color: #0b0f1a;
+      font-weight: 600;
+    }
+
+    /* ── VISTAS ── */
+    .vista { display: none; width: 100%; max-width: 580px; }
+    .vista.active { display: block; animation: fadeUp 0.4s ease both; }
+
+    /* ── FORMULARIO ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 40px;
+      width: 100%;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+      opacity: 0.6;
+    }
+
+    .form-group { margin-bottom: 24px; }
+
+    label {
+      display: block;
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+
+    input, select {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      padding: 14px 18px;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    input::placeholder { color: var(--muted); }
+    input:focus, select:focus {
+      border-color: var(--accent2);
+      box-shadow: 0 0 0 3px rgba(232,201,126,0.08);
+    }
+    select option { background: var(--surface2); }
+
+    .btn-primary {
+      width: 100%;
+      padding: 16px;
+      background: var(--accent);
+      color: #0b0f1a;
+      border: none;
+      border-radius: 10px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 8px;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: #f0d896;
+      box-shadow: 0 4px 24px rgba(232,201,126,0.2);
+      transform: translateY(-1px);
+    }
+
+    .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .btn-pdf {
+      width: 100%;
+      padding: 14px;
+      background: transparent;
+      color: var(--accent);
+      border: 1px solid var(--accent2);
+      border-radius: 10px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 16px;
+    }
+
+    .btn-pdf:hover {
+      background: rgba(232,201,126,0.08);
+      transform: translateY(-1px);
+    }
+
+    .spinner {
+      width: 18px; height: 18px;
+      border: 2px solid rgba(0,0,0,0.2);
+      border-top-color: #0b0f1a;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      display: none;
+    }
+
+    .result-box {
+      margin-top: 24px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 32px;
+      display: none;
+      animation: fadeUp 0.5s ease both;
+    }
+
+    .result-box.visible { display: block; }
+
+    .result-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    .result-label {
+      font-size: 11px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--accent);
+      font-weight: 500;
+    }
+
+    .copy-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 12px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      width: auto;
+      margin: 0;
+      transition: border-color 0.2s, color 0.2s;
+      font-family: 'DM Sans', sans-serif;
+    }
+
+    .copy-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+    .result-text {
+      color: #c8cdd8;
+      font-size: 14.5px;
+      line-height: 1.85;
+      white-space: pre-wrap;
+    }
+
+    .error-box {
+      margin-top: 20px;
+      background: rgba(239,68,68,0.08);
+      border: 1px solid rgba(239,68,68,0.25);
+      border-radius: 10px;
+      padding: 16px 20px;
+      color: #f87171;
+      font-size: 14px;
+      display: none;
+    }
+    .error-box.visible { display: block; }
+
+    /* ── HISTORIAL ── */
+    .historial-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    .historial-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 22px;
+      font-weight: 700;
+    }
+
+    .btn-refresh {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 13px;
+      padding: 8px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      transition: border-color 0.2s, color 0.2s;
+      width: auto;
+      margin: 0;
+    }
+
+    .btn-refresh:hover { border-color: var(--accent); color: var(--accent); }
+
+    .historial-empty {
+      text-align: center;
+      padding: 48px 0;
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    .historial-empty span { font-size: 32px; display: block; margin-bottom: 12px; }
+
+    /* Tarjetas historial */
+    .propuesta-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px 24px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      transition: border-color 0.2s;
+      animation: fadeUp 0.4s ease both;
+    }
+
+    .propuesta-card:hover { border-color: var(--accent2); }
+
+    .card-info { flex: 1; }
+
+    .card-id {
+      font-size: 11px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--accent);
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+
+    .card-cliente {
+      font-size: 16px;
+      font-weight: 500;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+
+    .card-servicio {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .card-actions { flex-shrink: 0; }
+
+    .btn-card-pdf {
+      background: transparent;
+      border: 1px solid var(--accent2);
+      color: var(--accent);
+      font-size: 13px;
+      padding: 8px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 500;
+      transition: background 0.2s;
+      width: auto;
+      margin: 0;
+      white-space: nowrap;
+    }
+
+    .btn-card-pdf:hover { background: rgba(232,201,126,0.08); }
+
+    footer {
+      margin-top: 48px;
+      color: var(--muted);
+      font-size: 12px;
+      animation: fadeUp 0.7s 0.3s ease both;
+    }
+
+    @keyframes fadeDown {
+      from { opacity: 0; transform: translateY(-20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="badge">✦ Powered by Groq AI</div>
+    <h1>Proposal<span>AI</span></h1>
+    <p>Tu herramienta de propuestas comerciales para freelancers.</p>
+  </header>
+
+  <!-- ── NAV TABS ── -->
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="cambiarVista('generar')">✦ Nueva Propuesta</button>
+    <button class="nav-tab" onclick="cambiarVista('historial')">📋 Ver Historial</button>
+  </div>
+
+  <!-- ── VISTA: GENERAR ── -->
+  <div class="vista active" id="vista-generar">
+    <div class="card">
+      <div class="form-group">
+        <label for="cliente">Nombre del Cliente</label>
+        <input type="text" id="cliente" placeholder="Ej: Juan Pérez / Empresa ABC" />
+      </div>
+      <div class="form-group">
+        <label for="servicio">Tipo de Servicio</label>
+        <select id="servicio">
+          <option value="" disabled selected>Selecciona un servicio...</option>
+          <option value="Diseño de página web profesional">Diseño Web</option>
+          <option value="Desarrollo de aplicación móvil">App Móvil</option>
+          <option value="Consultoría en marketing digital">Marketing Digital</option>
+          <option value="Diseño de identidad de marca y branding">Branding & Identidad</option>
+          <option value="Desarrollo de e-commerce">E-Commerce</option>
+          <option value="Consultoría en tecnología y sistemas">Consultoría Tech</option>
+          <option value="Redacción de contenido SEO">Redacción SEO</option>
+          <option value="Gestión de redes sociales">Redes Sociales</option>
+        </select>
+      </div>
+      <button class="btn-primary" id="generar-btn" onclick="generarPropuesta(event)">
+        <span id="btn-text">✦ Generar Propuesta</span>
+        <div class="spinner" id="spinner"></div>
+      </button>
+      <div class="error-box" id="error-box"></div>
+    </div>
+
+    <div class="result-box" id="result-box">
+      <div class="result-header">
+        <span class="result-label">✦ Propuesta Generada</span>
+        <button class="copy-btn" onclick="copiarPropuesta()">Copiar</button>
+      </div>
+      <div class="result-text" id="result-text"></div>
+      <button class="btn-pdf" onclick="descargarPDF()">📄 Descargar PDF</button>
+    </div>
+  </div>
+
+  <!-- ── VISTA: HISTORIAL ── -->
+  <div class="vista" id="vista-historial">
+    <div class="historial-header">
+      <span class="historial-title">Historial</span>
+      <button class="btn-refresh" onclick="cargarHistorial()">↻ Actualizar</button>
+    </div>
+    <div id="historial-lista"></div>
+  </div>
+
+  <footer>ProposalAI © 2026 — Herramienta para Freelancers</footer>
+
+  <script>
+    let propuestaId = null;
+
+    // ── NAVEGACIÓN ──
+    function cambiarVista(vista) {
+      document.querySelectorAll('.vista').forEach(v => v.classList.remove('active'));
+      document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+
+      document.getElementById('vista-' + vista).classList.add('active');
+      event.target.classList.add('active');
+
+      if (vista === 'historial') cargarHistorial();
+    }
+
+    // ── GENERAR PROPUESTA ──
+    async function generarPropuesta(event) {
+      if (event) event.preventDefault();
+
+      const cliente    = document.getElementById('cliente').value.trim();
+      const servicio   = document.getElementById('servicio').value;
+      const btn        = document.getElementById('generar-btn');
+      const btnText    = document.getElementById('btn-text');
+      const spinner    = document.getElementById('spinner');
+      const resultBox  = document.getElementById('result-box');
+      const resultText = document.getElementById('result-text');
+      const errorBox   = document.getElementById('error-box');
+
+      if (!cliente || !servicio) {
+        errorBox.textContent = 'Por favor completa todos los campos antes de continuar.';
+        errorBox.classList.add('visible');
+        return;
+      }
+
+      errorBox.classList.remove('visible');
+      resultBox.classList.remove('visible');
+      btn.disabled = true;
+      btnText.textContent = 'Generando...';
+      spinner.style.display = 'block';
+
+      try {
+        const response = await fetch('http://127.0.0.1:8000/generar_parrafo/', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ cliente, servicio })
+        });
+
+        const data = await response.json();
+
+        if (data.propuesta) {
+          resultText.textContent = data.propuesta;
+          propuestaId = data.id;
+          resultBox.classList.add('visible');
+        } else if (data.error) {
+          errorBox.textContent = '⚠ ' + data.error;
+          errorBox.classList.add('visible');
+        }
+      } catch (err) {
+        errorBox.textContent = '⚠ No se pudo conectar con el servidor. ¿Está corriendo FastAPI?';
+        errorBox.classList.add('visible');
+      } finally {
+        btn.disabled = false;
+        btnText.textContent = '✦ Generar Propuesta';
+        spinner.style.display = 'none';
+      }
+    }
+
+    function copiarPropuesta() {
+      const texto = document.getElementById('result-text').textContent;
+      navigator.clipboard.writeText(texto).then(() => {
+        const btn = document.querySelector('.copy-btn');
+        btn.textContent = '¡Copiado!';
+        setTimeout(() => btn.textContent = 'Copiar', 2000);
+      });
+    }
+
+    function descargarPDF() {
+      if (!propuestaId) return;
+      window.open(`http://127.0.0.1:8000/descargar_pdf/${propuestaId}`, '_blank');
+    }
+
+    // ── HISTORIAL ──
+    async function cargarHistorial() {
+      const lista = document.getElementById('historial-lista');
+      lista.innerHTML = '<p style="color:var(--muted);text-align:center;padding:24px">Cargando...</p>';
+
+      try {
+        const response = await fetch('http://127.0.0.1:8000/propuestas/');
+        const data = await response.json();
+
+        if (data.length === 0) {
+          lista.innerHTML = `
+            <div class="historial-empty">
+              <span>📭</span>
+              Aún no tienes propuestas generadas.
+            </div>`;
+          return;
+        }
+
+        // Mostrar más recientes primero
+        lista.innerHTML = data.reverse().map(p => `
+          <div class="propuesta-card">
+            <div class="card-info">
+              <div class="card-id">Propuesta #${p.id}</div>
+              <div class="card-cliente">${p.cliente}</div>
+              <div class="card-servicio">${p.servicio}</div>
+            </div>
+            <div class="card-actions">
+              <button class="btn-card-pdf" onclick="window.open('http://127.0.0.1:8000/descargar_pdf/${p.id}', '_blank')">
+                📄 PDF
+              </button>
+            </div>
+          </div>
+        `).join('');
+
+      } catch (err) {
+        lista.innerHTML = '<p style="color:#f87171;text-align:center;padding:24px">⚠ Error al cargar el historial.</p>';
+      }
+    }
+  </script>
+</body>
+</html>

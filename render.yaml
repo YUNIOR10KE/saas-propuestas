@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: proposalai-backend
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: GROQ_API_KEY
+        sync: false
+```
+
+---
+
+### PASO 3 — Base de datos (solución más fácil y gratuita)
+
+> ⚠️ SQLite en Render se borra al reiniciar. La solución más fácil es usar **Supabase (PostgreSQL gratuito)**.
+
+**3.1 — Crea cuenta en Supabase:**
+1. Ve a [supabase.com](https://supabase.com) y crea cuenta con GitHub
+2. Crea un **New Project**
+3. Ve a **Settings → Database → Connection String → URI**
+4. Copia la URL — se ve así:
+```
+postgresql://postgres:[PASSWORD]@db.xxxx.supabase.co:5432/postgres
